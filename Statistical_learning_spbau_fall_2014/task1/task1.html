@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+<title>Task1 (advertising) Тураев Тимур</title>
+
+<script src="task1_files/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="task1_files/bootstrap-2.3.2/css/bootstrap.min.css" rel="stylesheet" />
+<link href="task1_files/bootstrap-2.3.2/css/bootstrap-responsive.min.css" rel="stylesheet" />
+<script src="task1_files/bootstrap-2.3.2/js/bootstrap.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<link rel="stylesheet"
+      href="task1_files/highlight/default.css"
+      type="text/css" />
+<script src="task1_files/highlight/highlight.js"></script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">Task1 (advertising) Тураев Тимур</h1>
+</div>
+
+
+<p>Загружаем данные:</p>
+<pre class="r"><code>df &lt;- read.csv(&quot;data/Advertising.csv&quot;, row.names = NULL)
+df$X &lt;- NULL
+df.size &lt;- nrow(df)
+splom(~df)</code></pre>
+<p><img src="task1_files/figure-html/unnamed-chunk-2-1.png" title="" alt="" width="672" /></p>
+<p>Строим обучающую и тестовые выборки в отношении 2/1:</p>
+<pre class="r"><code>indices.train &lt;- sample(df.size, size=df.size*0.6666)
+df.train &lt;- df[indices.train, ]
+df.test &lt;- df[-indices.train, ]</code></pre>
+<p>Регрессия на обучающей выборке:</p>
+<pre class="r"><code>df.lm.train &lt;- lm(Sales ~ ., data=df.train)
+summary(df.lm.train)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Sales ~ ., data = df.train)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -8.4457 -0.8185  0.3476  1.2027  2.8942 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 2.991405   0.408670   7.320 2.36e-11 ***
+## TV          0.046013   0.001760  26.141  &lt; 2e-16 ***
+## Radio       0.177001   0.011516  15.370  &lt; 2e-16 ***
+## Newspaper   0.001478   0.007069   0.209    0.835    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 1.795 on 129 degrees of freedom
+## Multiple R-squared:  0.8819, Adjusted R-squared:  0.8792 
+## F-statistic: 321.1 on 3 and 129 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>Предсказание по полученной модели для тестового куска:</p>
+<pre class="r"><code>df.pred.test &lt;- predict(df.lm.train, df.test)</code></pre>
+<p>Графички:</p>
+<pre class="r"><code>panel.custom = function(...) { panel.xyplot(...); panel.loess(...); panel.lmline(...) }
+xyplot(fitted(df.lm.train) ~ df.train$Sales, pch=19, panel=panel.custom)</code></pre>
+<p><img src="task1_files/figure-html/unnamed-chunk-6-1.png" title="" alt="" width="672" /></p>
+<pre class="r"><code>xyplot(df.pred.test ~ df.test$Sales, pch=19, panel=panel.custom)</code></pre>
+<p><img src="task1_files/figure-html/unnamed-chunk-6-2.png" title="" alt="" width="672" /></p>
+<p>Видны ошибки на низких значениях Sales в той и другой выборке.</p>
+<p>RSS:</p>
+<pre class="r"><code>rss &lt;- function(r) sqrt(sum(r^2) / length(r))
+c(rss(df.lm.train$residuals),
+  rss(df.pred.test - df.test$Sales))</code></pre>
+<pre><code>## [1] 1.767965 1.487991</code></pre>
+<p>Уберем незначительный признак из модели (это были газеты):</p>
+<pre class="r"><code>df.lm.train.cut &lt;- update(df.lm.train, . ~ . -Newspaper)
+df.pred.test.cut &lt;- predict(df.lm.train.cut, df.test)
+c(rss(df.lm.train.cut$residuals),
+  rss(df.pred.test.cut - df.test$Sales))</code></pre>
+<pre><code>## [1] 1.768264 1.484464</code></pre>
+<p>Модель стала вести себя немного лучше после удаления незначимого признака: уменьшились ошибки; стало быть он только мешал.</p>
+<p>Поудаляем еще чего-нибудь, телевидение, например:</p>
+<pre class="r"><code>df.lm.train.cut &lt;- update(df.lm.train, . ~ . -TV)
+df.pred.test.cut &lt;- predict(df.lm.train.cut, df.test)
+c(rss(df.lm.train.cut$residuals),
+  rss(df.pred.test.cut - df.test$Sales))</code></pre>
+<pre><code>## [1] 4.436588 3.948546</code></pre>
+<p>Очень плохо.</p>
+<p>Или радио:</p>
+<pre class="r"><code>df.lm.train.cut &lt;- update(df.lm.train, . ~ . -Radio)
+df.pred.test.cut &lt;- predict(df.lm.train.cut, df.test)
+c(rss(df.lm.train.cut$residuals),
+  rss(df.pred.test.cut - df.test$Sales))</code></pre>
+<pre><code>## [1] 2.974829 3.348490</code></pre>
+<p>Тоже плохо.</p>
+<p>Или удалим вообще все признаки, оставив только сдвиг:</p>
+<pre class="r"><code>df.lm.train.cut &lt;- lm(Sales ~ 1, data=df.train)
+df.pred.test.cut &lt;- predict(df.lm.train.cut, df.test)
+c(rss(df.lm.train.cut$residuals),
+  rss(df.pred.test.cut - df.test$Sales))</code></pre>
+<pre><code>## [1] 5.144911 5.356311</code></pre>
+<p>И это тоже плохо.</p>
+<p>Это и понятно, после удаления значимых признаков, модель ведет себя сильно хуже.</p>
+<hr />
+<pre class="r"><code>model &lt;- function(f) {
+  lm &lt;- lm(f, data = df)
+  print(summary(lm))
+  lm &lt;- stepAIC(lm)
+  print(summary(lm))
+  print(c(summary(lm)$sigma, AIC(lm)))
+  lm
+}</code></pre>
+<p>Посмотрим на разные модели. Выше функция, которая строить линейную регрессию, улучшает ее stepAIC, и выводи значение критерия и RSE.</p>
+<p>Обычная</p>
+<pre class="r"><code>lm.default &lt;- model(Sales ~ .)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = f, data = df)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -8.8277 -0.8908  0.2418  1.1893  2.8292 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  2.938889   0.311908   9.422   &lt;2e-16 ***
+## TV           0.045765   0.001395  32.809   &lt;2e-16 ***
+## Radio        0.188530   0.008611  21.893   &lt;2e-16 ***
+## Newspaper   -0.001037   0.005871  -0.177     0.86    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 1.686 on 196 degrees of freedom
+## Multiple R-squared:  0.8972, Adjusted R-squared:  0.8956 
+## F-statistic: 570.3 on 3 and 196 DF,  p-value: &lt; 2.2e-16
+## 
+## Start:  AIC=212.79
+## Sales ~ TV + Radio + Newspaper
+## 
+##             Df Sum of Sq    RSS    AIC
+## - Newspaper  1      0.09  556.9 210.82
+## &lt;none&gt;                    556.8 212.79
+## - Radio      1   1361.74 1918.6 458.20
+## - TV         1   3058.01 3614.8 584.90
+## 
+## Step:  AIC=210.82
+## Sales ~ TV + Radio
+## 
+##         Df Sum of Sq    RSS    AIC
+## &lt;none&gt;                556.9 210.82
+## - Radio  1    1545.6 2102.5 474.52
+## - TV     1    3061.6 3618.5 583.10
+## 
+## Call:
+## lm(formula = Sales ~ TV + Radio, data = df)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -8.7977 -0.8752  0.2422  1.1708  2.8328 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  2.92110    0.29449   9.919   &lt;2e-16 ***
+## TV           0.04575    0.00139  32.909   &lt;2e-16 ***
+## Radio        0.18799    0.00804  23.382   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 1.681 on 197 degrees of freedom
+## Multiple R-squared:  0.8972, Adjusted R-squared:  0.8962 
+## F-statistic: 859.6 on 2 and 197 DF,  p-value: &lt; 2.2e-16
+## 
+## [1]   1.681361 780.394099</code></pre>
+<p>Из нее удалились газеты.</p>
+<p>Теперь полиномиальная второй степени:</p>
+<pre class="r"><code>lm.all &lt;- model(Sales ~ poly(TV, Radio, degree = 2))</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = f, data = df)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -5.0027 -0.2859 -0.0062  0.3829  1.2100 
+## 
+## Coefficients:
+##                                 Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)                     13.94780    0.04422 315.449   &lt;2e-16 ***
+## poly(TV, Radio, degree = 2)1.0  53.71298    0.62764  85.579   &lt;2e-16 ***
+## poly(TV, Radio, degree = 2)2.0  -9.99022    0.62778 -15.914   &lt;2e-16 ***
+## poly(TV, Radio, degree = 2)0.1  40.52042    0.62857  64.464   &lt;2e-16 ***
+## poly(TV, Radio, degree = 2)1.1 272.58577    8.82370  30.892   &lt;2e-16 ***
+## poly(TV, Radio, degree = 2)0.2   0.49390    0.62608   0.789    0.431    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.6244 on 194 degrees of freedom
+## Multiple R-squared:  0.986,  Adjusted R-squared:  0.9857 
+## F-statistic:  2740 on 5 and 194 DF,  p-value: &lt; 2.2e-16
+## 
+## Start:  AIC=-182.5
+## Sales ~ poly(TV, Radio, degree = 2)
+## 
+##                               Df Sum of Sq    RSS    AIC
+## &lt;none&gt;                                       75.6 -182.5
+## - poly(TV, Radio, degree = 2)  5    5341.5 5417.1  661.8
+## 
+## Call:
+## lm(formula = Sales ~ poly(TV, Radio, degree = 2), data = df)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -5.0027 -0.2859 -0.0062  0.3829  1.2100 
+## 
+## Coefficients:
+##                                 Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)                     13.94780    0.04422 315.449   &lt;2e-16 ***
+## poly(TV, Radio, degree = 2)1.0  53.71298    0.62764  85.579   &lt;2e-16 ***
+## poly(TV, Radio, degree = 2)2.0  -9.99022    0.62778 -15.914   &lt;2e-16 ***
+## poly(TV, Radio, degree = 2)0.1  40.52042    0.62857  64.464   &lt;2e-16 ***
+## poly(TV, Radio, degree = 2)1.1 272.58577    8.82370  30.892   &lt;2e-16 ***
+## poly(TV, Radio, degree = 2)0.2   0.49390    0.62608   0.789    0.431    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.6244 on 194 degrees of freedom
+## Multiple R-squared:  0.986,  Adjusted R-squared:  0.9857 
+## F-statistic:  2740 on 5 and 194 DF,  p-value: &lt; 2.2e-16
+## 
+## [1]   0.6243688 387.0779608</code></pre>
+<p>Модель явно улучшилась.</p>
+<p>Все же удалим не очень значимый признак:</p>
+<pre class="r"><code>lm.all2 &lt;- model(Sales ~ (TV + Radio)^2 + I(TV^2))</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = f, data = df)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -4.9949 -0.2969 -0.0066  0.3798  1.1686 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  5.137e+00  1.927e-01  26.663  &lt; 2e-16 ***
+## TV           5.092e-02  2.232e-03  22.810  &lt; 2e-16 ***
+## Radio        3.516e-02  5.901e-03   5.959 1.17e-08 ***
+## I(TV^2)     -1.097e-04  6.893e-06 -15.920  &lt; 2e-16 ***
+## TV:Radio     1.077e-03  3.466e-05  31.061  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.6238 on 195 degrees of freedom
+## Multiple R-squared:  0.986,  Adjusted R-squared:  0.9857 
+## F-statistic:  3432 on 4 and 195 DF,  p-value: &lt; 2.2e-16
+## 
+## Start:  AIC=-183.86
+## Sales ~ (TV + Radio)^2 + I(TV^2)
+## 
+##            Df Sum of Sq    RSS      AIC
+## &lt;none&gt;                   75.87 -183.857
+## - I(TV^2)   1     98.61 174.48  -19.298
+## - TV:Radio  1    375.38 451.25  170.742
+## 
+## Call:
+## lm(formula = Sales ~ (TV + Radio)^2 + I(TV^2), data = df)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -4.9949 -0.2969 -0.0066  0.3798  1.1686 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  5.137e+00  1.927e-01  26.663  &lt; 2e-16 ***
+## TV           5.092e-02  2.232e-03  22.810  &lt; 2e-16 ***
+## Radio        3.516e-02  5.901e-03   5.959 1.17e-08 ***
+## I(TV^2)     -1.097e-04  6.893e-06 -15.920  &lt; 2e-16 ***
+## TV:Radio     1.077e-03  3.466e-05  31.061  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.6238 on 195 degrees of freedom
+## Multiple R-squared:  0.986,  Adjusted R-squared:  0.9857 
+## F-statistic:  3432 on 4 and 195 DF,  p-value: &lt; 2.2e-16
+## 
+## [1]   0.6237639 385.7185178</code></pre>
+<p>Еще немного лучше.</p>
+<pre class="r"><code>tune(lm, lm.default$call$formula, data = df, tunecontrol = tune.control(sampling = &quot;fix&quot;))</code></pre>
+<pre><code>## 
+## Error estimation of &#39;lm&#39; using fixed training/validation set: 4.202117</code></pre>
+<pre class="r"><code>tune(lm, lm.all$call$formula, data = df, tunecontrol = tune.control(sampling = &quot;fix&quot;))</code></pre>
+<pre><code>## 
+## Error estimation of &#39;lm&#39; using fixed training/validation set: 24.66971</code></pre>
+<pre class="r"><code>tune(lm, lm.all2$call$formula, data = df, tunecontrol = tune.control(sampling = &quot;fix&quot;))</code></pre>
+<pre><code>## 
+## Error estimation of &#39;lm&#39; using fixed training/validation set: 0.5984859</code></pre>
+<pre class="r"><code>xyplot(lm.all2$residuals ~ lm.all2$fitted.values)</code></pre>
+<p><img src="task1_files/figure-html/unnamed-chunk-16-1.png" title="" alt="" width="672" /></p>
+<p>Получается, что с введением монотонной нелинейности модель улучшилась, уменьшились ошибки и немного снизили излишнюю оптиимстичность в начале графика.</p>
+<p>Посмотрим поведение на наших тренировочных выборках:</p>
+<pre class="r"><code>lm.all2.train &lt;- lm(Sales ~ (TV + Radio)^2 + I(TV^2), data=df.train)
+df.pred2.test &lt;- predict(lm.all2.train, df.test)
+xyplot(lm.all2.train$fitted.values ~ df.train$Sales, pch=19, panel=panel.custom)</code></pre>
+<p><img src="task1_files/figure-html/unnamed-chunk-17-1.png" title="" alt="" width="672" /></p>
+<pre class="r"><code>xyplot(df.pred2.test ~ df.test$Sales, pch=19, panel=panel.custom)</code></pre>
+<p><img src="task1_files/figure-html/unnamed-chunk-17-2.png" title="" alt="" width="672" /></p>
+<p>Круто, модель стала более лучшей.</p>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
