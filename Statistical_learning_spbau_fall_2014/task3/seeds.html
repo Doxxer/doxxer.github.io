@@ -350,7 +350,7 @@ check.nb =<span class="st"> </span>function(f) {
 </div>
 <div id="multinomial-regression" class="section level2">
 <h2>Multinomial regression</h2>
-<p>Снова тестовые фукнции</p>
+<p>Снова тестовые фукнции (как написано в письме (аж от 3 ноября :( ) trace выключен, там все сходится)</p>
 <pre class="sourceCode r"><code class="sourceCode r">check.testTrain.mr =<span class="st"> </span>function(f) {
   m.predicted &lt;-<span class="st"> </span><span class="kw">predict</span>(<span class="kw">multinom</span>(f, df.train, <span class="dt">maxit =</span> <span class="dv">2000</span>, <span class="dt">trace=</span><span class="ot">FALSE</span>), df.test)
   <span class="kw">print</span>(<span class="kw">table</span>(m.predicted, df.test$variety))
