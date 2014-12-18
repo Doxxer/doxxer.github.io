@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Тураев Тимур" />
+
+
+<title>Бетон</title>
+
+<script src="concrete_files/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="concrete_files/bootstrap-2.3.2/css/spacelab.min.css" rel="stylesheet" />
+<link href="concrete_files/bootstrap-2.3.2/css/bootstrap-responsive.min.css" rel="stylesheet" />
+<script src="concrete_files/bootstrap-2.3.2/js/bootstrap.min.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+pre, code { background-color: #f8f8f8; }
+code > span.kw { color: #204a87; font-weight: bold; }
+code > span.dt { color: #204a87; }
+code > span.dv { color: #0000cf; }
+code > span.bn { color: #0000cf; }
+code > span.fl { color: #0000cf; }
+code > span.ch { color: #4e9a06; }
+code > span.st { color: #4e9a06; }
+code > span.co { color: #8f5902; font-style: italic; }
+code > span.ot { color: #8f5902; }
+code > span.al { color: #ef2929; }
+code > span.fu { color: #000000; }
+code > span.er { font-weight: bold; }
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">Бетон</h1>
+<h4 class="author"><em>Тураев Тимур</em></h4>
+<h4 class="date"><em>16 декабря 2014 г.</em></h4>
+</div>
+
+
+<pre><code>## Loading required package: RColorBrewer</code></pre>
+<p>Загружаем и переименую нашу Y в POWER (это немного сократит ее длину на графиках) - а POWER это что-то типа прочности на сжатие в мегапаскалях, видимо основная характеристика бетона.</p>
+<pre class="sourceCode r"><code class="sourceCode r">data.concrete &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;data/concrete.csv&quot;</span>, <span class="dt">comment.char =</span> <span class="st">&#39;#&#39;</span>)
+<span class="kw">names</span>(data.concrete)[<span class="kw">names</span>(data.concrete) ==<span class="st"> &#39;ConcreteCompressiveStrength&#39;</span>] &lt;-<span class="st"> &#39;POWER&#39;</span>
+<span class="kw">summary</span>(data.concrete)</code></pre>
+<pre><code>##      Cement      BlastFurnaceSlag     FlyAsh           Water      
+##  Min.   :102.0   Min.   :  0.0    Min.   :  0.00   Min.   :121.8  
+##  1st Qu.:192.4   1st Qu.:  0.0    1st Qu.:  0.00   1st Qu.:164.9  
+##  Median :272.9   Median : 22.0    Median :  0.00   Median :185.0  
+##  Mean   :281.2   Mean   : 73.9    Mean   : 54.19   Mean   :181.6  
+##  3rd Qu.:350.0   3rd Qu.:142.9    3rd Qu.:118.30   3rd Qu.:192.0  
+##  Max.   :540.0   Max.   :359.4    Max.   :200.10   Max.   :247.0  
+##  Superplasticizer CoarseAggregate  FineAggregate        Age        
+##  Min.   : 0.000   Min.   : 801.0   Min.   :594.0   Min.   :  1.00  
+##  1st Qu.: 0.000   1st Qu.: 932.0   1st Qu.:731.0   1st Qu.:  7.00  
+##  Median : 6.400   Median : 968.0   Median :779.5   Median : 28.00  
+##  Mean   : 6.205   Mean   : 972.9   Mean   :773.6   Mean   : 45.66  
+##  3rd Qu.:10.200   3rd Qu.:1029.4   3rd Qu.:824.0   3rd Qu.: 56.00  
+##  Max.   :32.200   Max.   :1145.0   Max.   :992.6   Max.   :365.00  
+##      POWER      
+##  Min.   : 2.33  
+##  1st Qu.:23.71  
+##  Median :34.45  
+##  Mean   :35.82  
+##  3rd Qu.:46.13  
+##  Max.   :82.60</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">marginal.plot</span>(data.concrete)</code></pre>
+<div class="figure">
+<img src="concrete_files/figure-html/unnamed-chunk-2-1.png" />
+</div>
+<p>Scatter plot:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">splom</span>(~data.concrete, <span class="dt">data=</span>data.concrete,
+      <span class="dt">upper.panel=</span>function(x, y, ...) { <span class="kw">panel.xyplot</span>(x, y, ...); <span class="kw">panel.loess</span>(x, y, ..., <span class="dt">col=</span><span class="st">&#39;red&#39;</span>) },
+      <span class="dt">lower.panel=</span>function(x, y, ...) { },
+      <span class="dt">pscale=</span><span class="dv">0</span>, <span class="dt">varname.cex=</span><span class="fl">1.4</span>, <span class="dt">par.settings=</span><span class="kw">simpleTheme</span>(<span class="dt">pch=</span><span class="dv">17</span>, <span class="dt">cex=</span><span class="fl">0.2</span>))</code></pre>
+<div class="figure">
+<img src="concrete_files/figure-html/unnamed-chunk-3-1.png" />
+</div>
+<p>Зависимости:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">corrplot.mixed</span>(<span class="kw">cor</span>(data.concrete), <span class="dt">tl.cex=</span><span class="fl">1.5</span>)</code></pre>
+<div class="figure">
+<img src="concrete_files/figure-html/unnamed-chunk-4-1.png" />
+</div>
+<p>Сначала пристально посмотрим на то, что нам пришло.</p>
+<p>Видна прямая линейная зависимость между ПОВЕР и собственно цементом. Кроме этого еще с суперпластификатором (представляет собой нафталинформальдегидный суперпластификатор для бетонов и строительных растворов :) короче, уплотнитель).</p>
+<p>Также, видно, что Fine Aggregate и Coarse Aggregate после какого-то значения перестают оказывать влияние. Зависимость от воды и возраста бетона не так просты, мне кажется это от неравномерности данных: в левой и правой части графика по воде почти нет значений, а в центре много: может поэтому она так сильно вниз улетела где-то посередине. А график возраста очень “дискретен”. И если присмотреться, кажется, что его значения распределены как-то неравномерно… Но к этому мы еще вернемся.</p>
+<p>Кроме этого, по коррплоту видно, что довольно много зависимых друг от друга параметров.</p>
+<p>Поперебирав параметры (я на этом не хочу заострять внимание, с этим мы потренировались на первых двух домашках), я получил следующее, вроде самая лучшая модель, если не издеваться над параметрами:</p>
+<pre class="sourceCode r"><code class="sourceCode r">fit1 &lt;-<span class="st"> </span><span class="kw">lm</span>(POWER ~<span class="st"> </span>Age +<span class="st"> </span>Cement +<span class="st"> </span>Water*Superplasticizer +<span class="st"> </span>BlastFurnaceSlag +<span class="st"> </span>FlyAsh, data.concrete)
+<span class="kw">summary</span>(fit1)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = POWER ~ Age + Cement + Water * Superplasticizer + 
+##     BlastFurnaceSlag + FlyAsh, data = data.concrete)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -30.439  -6.400   0.209   6.940  33.095 
+## 
+## Coefficients:
+##                         Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)            45.502486   5.121626   8.884  &lt; 2e-16 ***
+## Age                     0.120990   0.005502  21.989  &lt; 2e-16 ***
+## Cement                  0.104717   0.004189  25.001  &lt; 2e-16 ***
+## Water                  -0.304965   0.026125 -11.673  &lt; 2e-16 ***
+## Superplasticizer       -2.351854   0.477719  -4.923 9.93e-07 ***
+## BlastFurnaceSlag        0.082116   0.004967  16.532  &lt; 2e-16 ***
+## FlyAsh                  0.048647   0.008447   5.759 1.12e-08 ***
+## Water:Superplasticizer  0.015927   0.002890   5.511 4.52e-08 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 10.26 on 1022 degrees of freedom
+## Multiple R-squared:  0.6252, Adjusted R-squared:  0.6226 
+## F-statistic: 243.5 on 7 and 1022 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>Коэффициенты у параметров очень маленькие, если сравнивать с Intercept модели, но все p-value очень небольшие: все они хорошо влияют.</p>
+<p>На скаттере можно видеть что Age распределен как-то неравномерно, похоже что он нелинеен: что если его прологарифмировать?</p>
+<pre class="sourceCode r"><code class="sourceCode r">fit2 &lt;-<span class="st"> </span><span class="kw">lm</span>(POWER ~<span class="st"> </span><span class="kw">log</span>(Age) +<span class="st"> </span>Cement +<span class="st"> </span>Water*Superplasticizer +<span class="st"> </span>BlastFurnaceSlag +<span class="st"> </span>FlyAsh, data.concrete)
+<span class="kw">summary</span>(fit2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = POWER ~ log(Age) + Cement + Water * Superplasticizer + 
+##     BlastFurnaceSlag + FlyAsh, data = data.concrete)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -22.9591  -4.4094   0.0202   4.2865  28.9493 
+## 
+## Coefficients:
+##                         Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)            19.464258   3.468202   5.612 2.57e-08 ***
+## log(Age)                8.712859   0.192143  45.346  &lt; 2e-16 ***
+## Cement                  0.109381   0.002929  37.343  &lt; 2e-16 ***
+## Water                  -0.283281   0.017676 -16.027  &lt; 2e-16 ***
+## Superplasticizer       -1.164789   0.325079  -3.583 0.000356 ***
+## BlastFurnaceSlag        0.083428   0.003473  24.023  &lt; 2e-16 ***
+## FlyAsh                  0.050869   0.005905   8.614  &lt; 2e-16 ***
+## Water:Superplasticizer  0.007442   0.001965   3.787 0.000161 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 7.177 on 1022 degrees of freedom
+## Multiple R-squared:  0.8167, Adjusted R-squared:  0.8154 
+## F-statistic: 650.4 on 7 and 1022 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>Все улучшилось, ожидаемо.</p>
+<p>Далее, посмотрим (как написано в задании) поближе на зависимость POWER от воды и возраста: какие-то графики на скаттере получились сильно изломленные, возможно это кандидаты на фактор:</p>
+<pre class="sourceCode r"><code class="sourceCode r">f &lt;-<span class="st"> </span>function(p) {
+  <span class="kw">xyplot</span>(POWER ~<span class="st"> </span>p, data.concrete, <span class="dt">panel =</span> function(...) { <span class="kw">panel.xyplot</span>(...); <span class="kw">panel.loess</span>(..., <span class="dt">col=</span><span class="st">&#39;red&#39;</span>) });
+}
+<span class="kw">plot</span>(<span class="kw">f</span>(data.concrete$Water))</code></pre>
+<div class="figure">
+<img src="concrete_files/figure-html/unnamed-chunk-7-1.png" />
+</div>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(<span class="kw">f</span>(data.concrete$Age))</code></pre>
+<div class="figure">
+<img src="concrete_files/figure-html/unnamed-chunk-7-2.png" />
+</div>
+<p>Вода: судя по всему на нелинейность повлияли даннные: их слишком много на 230, но можно сделать фактором “воды меньше 200” Возраст: тоже такой же фактор, возраст &lt; 110.</p>
+<p>Построим модель и выкинем некоторые ненужные параметры (сразу конечный результат):</p>
+<pre class="sourceCode r"><code class="sourceCode r">data.concrete$waterFactor &lt;-<span class="st"> </span>data.concrete$Water &lt;<span class="st"> </span><span class="dv">220</span>
+data.concrete$ageFactor &lt;-<span class="st"> </span>data.concrete$Age &lt;<span class="st"> </span><span class="dv">110</span>
+fit3 &lt;-<span class="st"> </span><span class="kw">lm</span>(POWER ~<span class="st"> </span>ageFactor:<span class="kw">log</span>(Age) +<span class="st"> </span>waterFactor:Water +<span class="st"> </span>Water*Superplasticizer +<span class="st"> </span>Cement +<span class="st"> </span>BlastFurnaceSlag +<span class="st"> </span>FlyAsh, data.concrete)
+<span class="kw">summary</span>(fit3)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = POWER ~ ageFactor:log(Age) + waterFactor:Water + 
+##     Water * Superplasticizer + Cement + BlastFurnaceSlag + FlyAsh, 
+##     data = data.concrete)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -22.464  -4.501  -0.191   4.410  26.805 
+## 
+## Coefficients:
+##                          Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)             28.920119   4.446329   6.504 1.22e-10 ***
+## Water                   -0.299662   0.019337 -15.497  &lt; 2e-16 ***
+## Superplasticizer        -1.535249   0.347109  -4.423 1.08e-05 ***
+## Cement                   0.108390   0.002830  38.307  &lt; 2e-16 ***
+## BlastFurnaceSlag         0.079751   0.003345  23.841  &lt; 2e-16 ***
+## FlyAsh                   0.042979   0.005776   7.441 2.12e-13 ***
+## ageFactorFALSE:log(Age)  7.494889   0.221611  33.820  &lt; 2e-16 ***
+## ageFactorTRUE:log(Age)   9.362553   0.210208  44.539  &lt; 2e-16 ***
+## waterFactorTRUE:Water   -0.037694   0.005638  -6.686 3.77e-11 ***
+## Water:Superplasticizer   0.009038   0.002078   4.350 1.50e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 6.855 on 1020 degrees of freedom
+## Multiple R-squared:  0.8331, Adjusted R-squared:  0.8316 
+## F-statistic: 565.8 on 9 and 1020 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># fit3 &lt;- stepAIC(fit3)</span></code></pre>
+<p>Проверим все полученные модели:</p>
+<pre class="sourceCode r"><code class="sourceCode r">resplot =<span class="st"> </span>function(p) {
+  <span class="kw">xyplot</span>(<span class="kw">resid</span>(p) ~<span class="st"> </span><span class="kw">fitted</span>(p), <span class="dt">panel =</span> function(...) { <span class="kw">panel.xyplot</span>(...);  <span class="kw">panel.lmline</span>(...); })
+}
+<span class="kw">plot</span>(<span class="kw">c</span>(<span class="dt">fit1=</span><span class="kw">resplot</span>(fit1),
+       <span class="dt">fit2=</span><span class="kw">resplot</span>(fit2),
+       <span class="dt">fit3=</span><span class="kw">resplot</span>(fit3)))</code></pre>
+<div class="figure">
+<img src="concrete_files/figure-html/unnamed-chunk-9-1.png" />
+</div>
+<pre class="sourceCode r"><code class="sourceCode r">cv &lt;-<span class="st"> </span>function(data) { <span class="kw">tune</span>(lm, data$call$formula, <span class="dt">data =</span> data.concrete, <span class="dt">tunecontrol =</span> <span class="kw">tune.control</span>(<span class="dt">sampling =</span> <span class="st">&quot;cross&quot;</span>)) }
+<span class="kw">cv</span>(fit1)</code></pre>
+<pre><code>## 
+## Error estimation of &#39;lm&#39; using 10-fold cross validation: 106.9503</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cv</span>(fit2)</code></pre>
+<pre><code>## 
+## Error estimation of &#39;lm&#39; using 10-fold cross validation: 52.1561</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cv</span>(fit3)</code></pre>
+<pre><code>## 
+## Error estimation of &#39;lm&#39; using 10-fold cross validation: 47.56382</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">anova</span>(fit1, fit2, fit3)</code></pre>
+<pre><code>## Analysis of Variance Table
+## 
+## Model 1: POWER ~ Age + Cement + Water * Superplasticizer + BlastFurnaceSlag + 
+##     FlyAsh
+## Model 2: POWER ~ log(Age) + Cement + Water * Superplasticizer + BlastFurnaceSlag + 
+##     FlyAsh
+## Model 3: POWER ~ ageFactor:log(Age) + waterFactor:Water + Water * Superplasticizer + 
+##     Cement + BlastFurnaceSlag + FlyAsh
+##   Res.Df    RSS Df Sum of Sq     F    Pr(&gt;F)    
+## 1   1022 107645                                 
+## 2   1022  52647  0     54998                    
+## 3   1020  47925  2      4722 50.25 &lt; 2.2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Хоть эта модель и лучше предыдущих, но все равно ошибка высока, если посмотреть на разброс значений POWER: от 2 до 80</p>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
